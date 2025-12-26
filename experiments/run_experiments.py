@@ -3,8 +3,8 @@ Experiment driver for comparing SA and ACO on synthetic TSP instances.
 
 This script:
 1. Ensures that benchmark instances exist (generating them if needed).
-2. Runs Simulated Annealing (SA) and Ant Colony Optimization (ACO)
-   on all instances for multiple random seeds.
+2. Runs Simulated Annealing (SA), Ant Colony Optimization (ACO), and
+   Nearest Neighbor (NN) on all instances for multiple random seeds.
 3. Records per-run results (tour length, runtime, approximation ratio)
    into a CSV file suitable for academic reporting.
 4. Produces basic plots:
@@ -30,6 +30,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from algorithms.aco import ACOParameters, ant_colony_optimization_tsp
+from algorithms.nn import NNParameters, nearest_neighbor_tsp
 from algorithms.sa import SAParameters, simulated_annealing_tsp
 from data.generate_instances import (
     TSPInstance,
@@ -65,6 +66,7 @@ def run_single_experiment(
     seed: int,
     sa_params: SAParameters,
     aco_params: ACOParameters,
+    nn_params: NNParameters,
 ) -> RunResult:
     """
     Run a single (algorithm, instance, seed) experiment and measure runtime.
@@ -79,6 +81,9 @@ def run_single_experiment(
     elif algorithm == "ACO":
         res = ant_colony_optimization_tsp(dist, aco_params, seed)
         best_len = res.best_length
+    elif algorithm == "NN":
+        res = nearest_neighbor_tsp(dist, nn_params, seed)
+        best_len = res.best_length
     else:
         raise ValueError(f"Unknown algorithm: {algorithm}")
     end = time.perf_counter()
@@ -88,7 +93,7 @@ def run_single_experiment(
 
 def run_all_experiments() -> None:
     """
-    Run SA and ACO on all benchmark instances and save results/plots.
+    Run SA, ACO, and NN on all benchmark instances and save results/plots.
     """
     instances = ensure_instances()
     # Sort instances by (size, name) for nicer plots.
@@ -114,6 +119,7 @@ def run_all_experiments() -> None:
         n_iterations=100,
         initial_pheromone=1.0,
     )
+    nn_params = NNParameters(randomize_start=True)
 
     os.makedirs("report_assets", exist_ok=True)
     csv_path = os.path.join("report_assets", "tables.csv")
@@ -133,7 +139,7 @@ def run_all_experiments() -> None:
 
     for name, inst in sorted_instances:
         n_cities = inst.coordinates.shape[0]
-        for algorithm in ("SA", "ACO"):
+        for algorithm in ("SA", "ACO", "NN"):
             per_run_results: List[RunResult] = []
 
             for seed in seeds:
@@ -143,6 +149,7 @@ def run_all_experiments() -> None:
                     seed=seed,
                     sa_params=sa_params,
                     aco_params=aco_params,
+                    nn_params=nn_params,
                 )
                 per_run_results.append(result)
 
