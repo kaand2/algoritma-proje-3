@@ -247,8 +247,8 @@ def create_plots_from_rows(
             min_val = s["min_approx_ratio"]
             max_val = s["max_approx_ratio"]
             ys.append(mean_val)
-            yerr_lower.append(mean_val - min_val if np.isfinite(min_val) else 0)
-            yerr_upper.append(max_val - mean_val if np.isfinite(max_val) else 0)
+            yerr_lower.append(max(0, mean_val - min_val) if np.isfinite(min_val) else 0)
+            yerr_upper.append(max(0, max_val - mean_val) if np.isfinite(max_val) else 0)
         if xs:
             axes[2].errorbar(
                 xs,
